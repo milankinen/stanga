@@ -1,0 +1,14 @@
+*.iml
+.idea
+.DS_Store
+
+.npm
+node_modules
+
+*.log
+npm-debug.log*
+
+lib
+
+coverage
+.nyc_output
