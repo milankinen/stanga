@@ -1,11 +1,16 @@
 import Rx, {Observable as O} from "rx"
 import R from "ramda"
+import {makeModelDriver} from "./model"
 
 const keys = x => x ? Object.keys(x) : []
 const extend = Object.assign
 
 const demuxListBy = (list$$, keys, fn) =>
   keys.reduce((acc, k) => ({...acc, [k]: list$$.flatMapLatest(fn(k))}), {})
+
+// ==== public stuff ====
+
+export const Model = makeModelDriver
 
 export const demuxAndCombine = (list$$, ...keys) =>
   demuxListBy(list$$, keys, k => xs => !xs.length ? O.just([]) : O.combineLatest(...xs.map(x => x[k])))
