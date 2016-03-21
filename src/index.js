@@ -18,6 +18,12 @@ export const demuxAndCombine = (list$$, ...keys) =>
 export const demuxAndMerge = (list$$, ...keys) =>
   demuxListBy(list$$, keys, k => xs => O.merge(xs.map(x => x[k] || O.empty())))
 
+export const mergeKeys = (...objects) => {
+  const merged = {}
+  objects.forEach(o => keys(o).forEach(k => merged[k] = merged[k] ? merged[k].merge(o[k]) : o[k]))
+  return merged
+}
+
 export const muxListBy = (function () {
   const flatMapListBy = R.curryN(3, function flatMapListBy(by, list$, it, replay = ["DOM"]) {
     return O.using(() => new Cache(replay), cache => {
