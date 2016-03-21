@@ -1,4 +1,4 @@
-import {Observable as O} from "rx"
+import Rx, {Observable as O} from "rx"
 import R from "ramda"
 
 const keys = x => x ? Object.keys(x) : []
@@ -56,16 +56,16 @@ export const flatMapListBy = (function () {
     },
     put(key, sinks, idx) {
       const streams = {}
-      const disposes = {}
+      const disposable = new Rx.CompositeDisposable()
       keys(sinks).map(name => {
         const sink$ = this.toReplay[name] ? sinks[name].replay(null, 1) : sinks[name].publish()
-        const d = sink$.connect()
+        disposable.add(sink$.connect())
         streams[name] = sink$
-        disposes[name] = d
       })
       this.cache[key] = {
         key,
         streams,
+        disposable,
         idx
       }
     },
@@ -76,9 +76,7 @@ export const flatMapListBy = (function () {
       const cached = this.cache[key]
       if (cached) {
         delete this.cache[key]
-        keys(cached.disposes).forEach(k => {
-          cached.disposes[k].dispose()
-        })
+        cached.disposable.dispose()
       }
     },
     keys() {
