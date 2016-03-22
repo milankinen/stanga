@@ -15,7 +15,7 @@ TODO
 
 ### Installation
 
-`stanga` is available for CommonJS compatible bundlers via [npm]](https://www.npmjs.com/package/stanga):
+`stanga` is available for CommonJS compatible bundlers via [npm](https://www.npmjs.com/package/stanga):
 ```
 npm i --save stanga
 ```
