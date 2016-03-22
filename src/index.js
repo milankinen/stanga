@@ -18,7 +18,7 @@ export const flatCombine = (list$$, ...keys) =>
 export const flatMerge = (list$$, ...keys) =>
   flattenBy(list$$, keys, k => xs => O.merge(xs.map(x => x[k] || O.empty())))
 
-export const mergeKeys = (...objects) => {
+export const mergeByKeys = (...objects) => {
   const merged = {}
   objects.forEach(o => keys(o).forEach(k => merged[k] = merged[k] ? merged[k].merge(o[k]) : o[k]))
   return merged
