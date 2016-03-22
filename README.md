@@ -133,28 +133,7 @@ property `a` changes. And modifications with `a.mod(mod$)` change only `a`'s sta
 Let's see how it looks like in the counter example:
 ```javascript 
 function Counter({DOM, M}) {
-  const state$ = M
-  const incMod$ = DOM.select(".inc")
-    .events("click")
-    .map(() => state => state + 1)
-  const decMod$ = DOM.select(".dec")
-    .events("click")
-    .map(() => state => state - 1)
-
-  // let's merge all mods from this component
-  const mod$ = O.merge(incMod$, decMod$)
-
-  const vdom$ = state$.map(counter => h("div", [
-    h("h1", `Counter value is ${counter}`),
-    h("button.inc", "++"),
-    h("button.dec", "--")
-  ]))
-
-  return {
-    DOM: vdom$,
-    // and make the compatible with Model driver
-    M: M.mod(mod$)
-  }
+  // NO CHANGES TO THE EXISTING CODE!
 }
 
 function main({DOM, M}) {
