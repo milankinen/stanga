@@ -15,8 +15,8 @@ export const Model = makeModelDriver
 export const flatCombine = (list$$, ...keys) =>
   flattenBy(list$$, keys, k => xs => !xs.length ? O.just([]) : O.combineLatest(...xs.map(x => x[k])))
 
-export const demuxAndMerge = (list$$, ...keys) =>
-  demuxListBy(list$$, keys, k => xs => O.merge(xs.map(x => x[k] || O.empty())))
+export const flatMerge = (list$$, ...keys) =>
+  flattenBy(list$$, keys, k => xs => O.merge(xs.map(x => x[k] || O.empty())))
 
 export const mergeKeys = (...objects) => {
   const merged = {}
