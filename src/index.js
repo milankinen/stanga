@@ -24,8 +24,8 @@ export const mergeByKeys = (...objects) => {
   return merged
 }
 
-export const muxListBy = (function () {
-  const flatMapListBy = R.curryN(3, function flatMapListBy(by, list$, it, replay = ["DOM"]) {
+export const liftListBy = (function () {
+  const liftListBy = R.curryN(3, function liftListBy(by, list$, it, replay = ["DOM"]) {
     return O.using(() => new Cache(replay), cache => {
       return list$
         .distinctUntilChanged(items => items.map(item => by(item)), (a, b) => {
@@ -106,7 +106,7 @@ export const muxListBy = (function () {
     }
   })
 
-  return flatMapListBy
+  return liftListBy
 })();
 
-export const muxListById = muxListBy(R.prop("id"))
+export const liftListById = liftListBy(R.prop("id"))

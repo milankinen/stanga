@@ -1,13 +1,13 @@
 import "should"
 import Rx, {Observable as O} from "rx"
-import {muxListById} from "../src/index"
+import {liftListById} from "../src/index"
 
 const keys = x => x ? Object.keys(x) : []
 
-describe("muxListById", () => {
+describe("liftListById", () => {
   it("create item sub-streams only once", done => {
     const list$ = O.of([{id: 1}], [{id: 1}], [{id: 1}, {id: 2}])
-    muxListById(list$, id => ({A: O.just(id)}))
+    liftListById(list$, id => ({A: O.just(id)}))
       .bufferWithTime(100)
       .first()
       .subscribe(
@@ -19,7 +19,7 @@ describe("muxListById", () => {
 
   it("allows re-indexing items without re-creating sub-streams", done => {
     const list$ = O.of([{id: 1}, {id: 2}], [{id: 1}, {id: 2}])
-    muxListById(list$, id => ({A: O.just(id)}))
+    liftListById(list$, id => ({A: O.just(id)}))
       .bufferWithTime(100)
       .first()
       .subscribe(
@@ -31,7 +31,7 @@ describe("muxListById", () => {
 
   it("removes sub-streams when item is removed from the list", done => {
     const list$ = O.of([{id: 1}], [])
-    muxListById(list$, id => ({A: O.just(id)}))
+    liftListById(list$, id => ({A: O.just(id)}))
       .bufferWithTime(100)
       .first()
       .subscribe(
@@ -43,7 +43,7 @@ describe("muxListById", () => {
 
   it("disposes sub-streams when item is removed", done => {
     const list$ = O.of([{id: 1}], []).merge(O.never())
-    muxListById(list$,
+    liftListById(list$,
       id => ({
         A: O.just(id).finally(() => {
           setTimeout(done, 100)
@@ -59,7 +59,7 @@ describe("muxListById", () => {
 
   it("makes inner streams hot", done => {
     const list$ = O.of([{id: 1}])
-    muxListById(list$, id => ({A: O.just(id).do(() => done())}))
+    liftListById(list$, id => ({A: O.just(id).do(() => done())}))
       .subscribe(() => null, done.fail)
   })
 
@@ -72,7 +72,7 @@ describe("muxListById", () => {
       ids.should.deepEqual([1, 2])
       done()
     })
-    list$$.flatMapLatest(list$ => muxListById(list$, id => ({
+    list$$.flatMapLatest(list$ => liftListById(list$, id => ({
         A: O.just(id).finally(() => s.onNext(id))
       })))
       .subscribe(() => null, done.fail)
