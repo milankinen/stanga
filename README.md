@@ -1,6 +1,6 @@
 # Stanga
 
-The essential Cycling gear that every Cyclist needs - for faster rides.
+The essential Cycling gear every Cyclist needs. Crafted with care. For easier rides.
 
 [![Travis Build](https://img.shields.io/travis/milankinen/stanga/master.svg?style=flat-square)](https://travis-ci.org/milankinen/stanga)
 [![Code Coverage](https://img.shields.io/codecov/c/github/milankinen/stanga/master.svg?style=flat-square)](https://codecov.io/github/milankinen/stanga)
@@ -9,126 +9,207 @@ The essential Cycling gear that every Cyclist needs - for faster rides.
 
 ## Motivation
 
-TODO
+**[Cycle.js](http://cycle.js.org)** does great job when the application is simple. However,
+when the application complexity grows, trivial things become non-trivial very quickly.
+The tutorials and examples don't have any common patterns or best practices to deal with
+these complex situations and developers are by their own.
 
-## Usage
+This library aims to give some tried-and-tests, "battle-proven" functions and utilities 
+to solve these problems so that you can build your complex Cycle application faster and easier.
 
-### Installation
+The origin of these utilities comes from **[CALM^2](https://github.com/calmm-js)**, but
+they're applicable to Cycle codebase easily (with minor modifications) because the 
+architecture designs are some close to each other. Thanks to 
+**[Vesa](https://twitter.com/VesaKarvonen)** who has a great influence for these patterns.
 
-`stanga` is available for CommonJS compatible bundlers via [npm](https://www.npmjs.com/package/stanga):
-```
-npm i --save stanga
-```
+## Tutorial
 
-### API reference
+**OBS!** If you are searching for API reference, please see below.
 
-#### `Model`
+### Placing the state to `Model` driver and reading it
 
-TODO
+If you're already familiar with [cycle-examples](https://github.com/cyclejs/examples) this
+section may confuse you. Traditionally in Cycle the application state lives inside the
+`main` so that **i**ntents (like clicks) modify the state (= **m**odel) and the modified
+state is passed to the **v**iew that produces you a stream of virtual dom `vdom$`.
 
-#### `mergeKeys :: (...sinks) => sink`
-
-Merges streams per key from the given list of sink objects (objects of streams). 
-Result sink contains all keys that appear in any of the given sinks.
-```javascript
-import {mergeKeys} from "stanga"
-
-const aSinks = Counter(sources)           // aSink: {DOM, HTTP}
-const bSinks = Counter(sources)           // bSink: {DOM, HTTP}
-const cSink  = List(sources)              // cSink: {DOM, items$}
-const sinks = mergeKeys(aSinks, bSinks)   // sinks: {DOM, HTTP, items$}
-```
-
-
-#### `muxListById :: (list$, (id => sinks)) => sink$`
-
-This function is almost `list$.map(...)` but bumped with steroids. It's meant to
-render sub-applications for list items with heavy performance optimization.
-
-`list$` is an observable of list where every item have an unique `.id` property.
-`(id => sinks)` is a mapper function that creates a component for the item and
-returns its sinks. This mapper function is called **only once** for the added
-items. When item is removed, its sinks are disposed.
-
-This function is an excellent match with `Model` driver.
+With `stanga`, you move your state from `main` to `Model` driver. You can give the initial
+state to the driver during the driver initialization.
 
 ```javascript
-import R from "ramda"
-import {L, muxListById} from "stanga"
-import Item from "./Item"
+import {run} from "@cycle/core"
+import {makeDOMDriver} from "@cycle/dom"
+import {Model} from "stanga"
 
-function main(sources) {
-  const items$ = sources.M.lens("items")
-  const children$$ = muxListById(items$, id => {
-    const item$ = items$.lens(L.find(R.whereEq({id})))
-    return Item({...sources, M: item$})
-  })
-}
-```
+run(main, {
+  DOM: makeDOMDriver("#app"),
+  M: Model(0)     // initial state = 0
+})
+``` 
 
-By default, only `DOM` sinks are replayed. If you have other sinks that produce
-value(s) **immediately** after subscription, you can define also them to be replayed
-by giving a list of replayed sinks as a third parameter (this is for advanced users
-only, normally "intent-only" sinks like HTTP should not need replaying).
+Now the state lives in model driver `M` which is just an observable that you can use
+like any other observable in Cycle:
 
 ```javascript
-import R from "ramda"
-import {L, muxListById} from "stanga"
-import Item from "./Item"
-
-function main(sources) {
-  const items$ = sources.M.lens("items")
-  const replayedSinks = ["DOM", "myCustomSink"]
-  const children$$ = muxListById(items$, id => {
-    const item$ = items$.lens(L.find(R.whereEq({id})))
-    return Item({...sources, M: item$})
-  }, replayedSinks)
-}
-```
-
-#### `demuxAndCombine :: (sinks$$, ...keys) => sinks`
-
-This function is an easy way to combine get latest values from specific child sinks as
-an array. Usually you want to use this for `DOM` sinks after `muxListById`.
-
-```javascript
-import R from "ramda"
-import {L, muxListById} from "stanga"
-import Item from "./Item"
-
-function main(sources) {
-  const items$ = sources.M.lens("items")
-  const children$$ = muxListById(items$, id => ...same as above...)
-  const children = demuxAndCombine(children$$, "DOM")
-  // children.DOM values are arrays containing latest values from children DOM sinks 
-  // (like from Observable.combineLatest)
-  const vtree$ = children.DOM.map(itemVtrees => h("ul#my-list", itemVtrees))
-  return { DOM: vtree$ }
-}
-```
-
-#### `demuxAndMerge :: (sinks$$, ...keys) => sinks`
-
-Same as `demuxAndCombine` but uses `Observable.merge` to combine child sinks instead of 
-`Observable.combineLatest`. Usually you want to use this for "intent-only" sinks where
-you just want to return an Observable of values (like HTTP)
-
-```javascript
-import R from "ramda"
-import {L, muxListById} from "stanga"
-import Item from "./Item"
-
-function main(sources) {
-  const items$ = sources.M.lens("items")
-  const children$$ = muxListById(items$, id => ...same as above...)
-  const children = demuxAndMerge(children$$, "HTTP")
+function main({DOM, M}) {
+  const state$ = M
   return {
-    HTTP: children.HTTP
+    DOM: state$.map(counter => h("h1", `Counter value is ${counter}`))
   }
 }
 ```
 
+Not bad, huh? Let's go forward!
 
+### Modifying the state 
+
+Now you know how to read the state. Let's take a look how to modify it. Like in Cycle's docs,
+write effects go to sinks - and `Model` driver is not an exception. You may've faced `mod$`
+streams when looking at Cycle's examples. `mod$` is a stream of functions `currentState => newState`,
+that do the state modifying. Those are the way to modify the `Model` driver's state too.
+ 
+`Model` driver's source provides a `.mod` in order to "convert" those modifications into 
+format that driver understands. Let's make the counter editable!
+
+```javascript
+import {Observable as O} from "rx"
+
+function main({DOM, M}) {
+  const state$ = M
+  const incMod$ = DOM.select(".inc")
+    .events("click")
+    .map(() => state => state + 1)
+  const decMod$ = DOM.select(".dec")
+    .events("click")
+    .map(() => state => state - 1)
+  
+  // let's merge all mods from this component
+  const mod$ = O.merge(incMod$, decMod$)
+  
+  const vdom$ = state$.map(counter => h("div", [
+    h("h1", `Counter value is ${counter}`),
+    h("button.inc", "++"),
+    h("button.dec", "--")
+  ]))
+  
+  return {
+    DOM: vdom$,
+    // and make the compatible with Model driver
+    M: M.mod(mod$)
+  }
+}
+``` 
+
+Okay that looks very similar to Cycle's examples. But there is no (direct) connection
+between intents (`mod$`) and `state$`?! That's right, the connection is made inside
+the driver - driver changes the state based on the mods and emits the changed state
+back to the component via `state$` stream. If you've used `HTTP` driver, the behaviour 
+is **exactly same**. Got it?
+
+If you want to completely override the state, Model driver provides `.set` method,
+which takes a stream of values (instead of mod functions!) and resets the state by
+using those values (i.e. shorthand to `M.mod(value$.map(value => () => value))`).
+
+### Getting some sub-state by using lenses
+
+Nothing new? All of that could've done by using "traditional" Cycle approach, you
+might think. Yes, true. But let's go forward. How about if you must have two counters,
+print their total value and provide a way to reset both counters at once?
+
+In the "traditional" approach, the solution might look something like 
+[this](https://gist.github.com/milankinen/cb0e898ae52c61e8d5da)... Whoah! That's
+a lot of stuff with things like proxy subjects stream switching, skipping and
+concatenation. Let's take a look how one would build the same app with 
+`stanga`'s model driver!
+
+Model driver source has `.lens(Lens)` method that uses internally 
+[partial.lenses](https://github.com/calmm-js/partial.lenses). In order to understand,
+lenses better, you have to take a look at `partial.lenses` docs. For you can just
+treat them like property getter `const a = M.lens("a")` where `a` is a model driver
+(containing exactly same methods `.mod`, `.set` and `.lens`) **BUT** so that it uses
+the original state's property `.a` - it's a stream that emits the changes only when
+property `a` changes. And modifications with `a.mod(mod$)` change only `a`'s state!
+
+Let's see how it looks like in the counter example:
+```javascript 
+function Counter({DOM, M}) {
+  const state$ = M
+  const incMod$ = DOM.select(".inc")
+    .events("click")
+    .map(() => state => state + 1)
+  const decMod$ = DOM.select(".dec")
+    .events("click")
+    .map(() => state => state - 1)
+
+  // let's merge all mods from this component
+  const mod$ = O.merge(incMod$, decMod$)
+
+  const vdom$ = state$.map(counter => h("div", [
+    h("h1", `Counter value is ${counter}`),
+    h("button.inc", "++"),
+    h("button.dec", "--")
+  ]))
+
+  return {
+    DOM: vdom$,
+    // and make the compatible with Model driver
+    M: M.mod(mod$)
+  }
+}
+
+function main({DOM, M}) {
+  const state$ = M
+  const a$ = state$.lens("a")
+  const b$ = state$.lens("b")
+  // we can use "lensed" a$ and b$ as a driver for child components
+  const a = isolate(Counter)({DOM, M: a$})
+  const b = isolate(Counter)({DOM, M: b$})
+
+  const resetMod$ = DOM.select(".reset").events("click").map(() => ({a: 0, b: 0}))
+  const aMod$ = a.M
+  const bMod$ = b.M
+
+  const vdom$ = O.combineLatest(state$, a.DOM, b.DOM, (state, a, b) =>
+    h("div", [
+      a, b,
+      h("hr"),
+      h("h2", `Total: ${state.a + state.b}`),
+      h("button.reset", "Reset")
+    ]))
+  
+  return {
+    DOM: vdom$,
+    // a.M and b.M are already converted to Model driver's mods
+    // in Counter component so we can merge them to parent's mods
+    // directly
+    M: O.merge(M.mod(resetMod$), aMod$, bMod$)
+  }
+}
+
+run(main, {
+  DOM: makeDOMDriver("#app"),
+  M: Model({a: 0, b: 0})
+})
+```
+
+As you can see, there is **no modifications** to the original `Counter` component!
+And no switching, proxying or other "advanced" stuff. In the end, the problem is 
+not advanced - just some simple stream processing!
+
+Note that you can pass lensed sub-states directly to sub-component as a model driver
+and merge the modification sinks to parent's modifications like any like you'd merge
+any other stream. *And this is the core pattern of `stanga` that gets repeated 
+everywhere.* Once you get it, you'll be able to create complex apps like they were
+as simple as the previous counter app.
+
+### Processing list states by using lenses (again)
+
+TODO...
+
+
+## API Reference
+
+TODO...
 
 
 ## License
