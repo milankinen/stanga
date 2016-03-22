@@ -1,8 +1,8 @@
 {
   "name": "stanga",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": false,
-  "description": "The essential Cycling gear that every Cyclist needs",
+  "description": "The essential Cycling gear every Cyclist needs. Crafted with care. For easier rides.",
   "main": "lib/index.js",
   "author": "Matti Lankinen <m.lankinen@iki.fi> (https://github.com/milankinen)",
   "license": "MIT",
