@@ -20,7 +20,7 @@ to solve these problems so that you can build your complex Cycle application fas
 The origin of these utilities comes from **[CALM^2](https://github.com/calmm-js)**, but
 they're applicable to Cycle codebase easily (with minor modifications) because the 
 architecture designs are some close to each other. Thanks to 
-**[Vesa](https://twitter.com/VesaKarvonen)** who has a great influence for these patterns.
+**[Vesa](https://twitter.com/VesaKarvonen)** who is the main inventor of these patterns.
 
 ## Tutorial
 
@@ -29,7 +29,7 @@ architecture designs are some close to each other. Thanks to
 ### Placing the state to `Model` driver and reading it
 
 If you're already familiar with [cycle-examples](https://github.com/cyclejs/examples) this
-section may confuse you. Traditionally in Cycle the application state lives inside the
+section may confuse you. Traditionally in Cycle, the application state lives inside the
 `main` so that **i**ntents (like clicks) modify the state (= **m**odel) and the modified
 state is passed to the **v**iew that produces you a stream of virtual dom `vdom$`.
 
@@ -66,7 +66,7 @@ Not bad, huh? Let's go forward!
 Now you know how to read the state. Let's take a look how to modify it. Like in Cycle's docs,
 write effects go to sinks - and `Model` driver is not an exception. You may've faced `mod$`
 streams when looking at Cycle's examples. `mod$` is a stream of functions `currentState => newState`,
-that do the state modifying. Those are the way to modify the `Model` driver's state too.
+that does the actual state modification. Those are the way to modify the `Model` driver's state too.
  
 `Model` driver's source provides a `.mod` in order to "convert" those modifications into 
 format that driver understands. Let's make the counter editable!
