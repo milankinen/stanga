@@ -23,8 +23,8 @@ function main({DOM, M}) {
     .map(() => counters => counters.map(c => ({...c, val: 0})))
   const appendMod$ = DOM.select(".add").events("click")
     .map(() => counters => [...counters, {id: ID++, val: 0}])
-  const undoMod$ = undo$.sample(DOM.select(".undo").events("click")).do(x => console.log("undo"))
-  const redoMod$ = redo$.sample(DOM.select(".redo").events("click")).do(x => console.log("redo"))
+  const undoMod$ = undo$.sample(DOM.select(".undo").events("click"))
+  const redoMod$ = redo$.sample(DOM.select(".redo").events("click"))
 
   const vdom$ = O.combineLatest(counters$, canUndo$, canRedo$, childVTrees$,
     (counters, canUndo, canRedo, children) =>
