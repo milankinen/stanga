@@ -18,7 +18,7 @@ you can focus on building your Cycle application.
 
 The origin of these utilities comes from **[CALM^2](https://github.com/calmm-js)**, but
 they're applicable to Cycle codebase easily (with minor modifications) because the 
-architecture designs are some close to each other. Thanks to 
+architecture designs are so close to each other. Thanks to 
 **[Vesa](https://twitter.com/VesaKarvonen)** who is the main inventor of these patterns.
 
 ## Tutorial
