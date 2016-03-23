@@ -1,6 +1,7 @@
 import "should"
 import Rx, {Observable as O} from "rx"
-import {liftListById} from "../src/index"
+import R from "ramda"
+import {liftListById, Model} from "../src/index"
 
 const keys = x => x ? Object.keys(x) : []
 
@@ -76,5 +77,35 @@ describe("liftListById", () => {
         A: O.just(id).finally(() => s.onNext(id))
       })))
       .subscribe(() => null, done.fail)
+  })
+
+
+  it("creates a lensed sub-state from the items if lifting model", done => {
+    const mod$ = new Rx.ReplaySubject(4)
+    const list$ = Model([{id: 1, msg: "tsers"}])(mod$)
+    O.merge(
+      list$.set(O.just([{id: 1, msg: "foo"}, {id: 2, msg: "foo"}])).delay(1),
+      list$.set(O.just([{id: 1, msg: "bar"}, {id: 2, msg: "foo"}])).delay(2),
+      list$.set(O.just([{id: 1, msg: "bar"}, {id: 2, msg: "bar"}])).delay(3),
+      list$.set(O.just([{id: 2, msg: "tsers"}])).delay(4)
+    ).subscribe(mod$)
+
+    liftListById(list$, (_, item$) => ({m: item$.lens("msg")}))
+      .map(R.pluck("m"))
+      .flatMapLatest(O.combineLatest)
+      .bufferWithTime(100)
+      .first()
+      .subscribe(
+        xs => xs.should.deepEqual([
+          ["tsers"],
+          ["foo", "foo"],
+          ["bar", "foo"],
+          ["bar", "bar"],
+          ["tsers"]
+        ]),
+        done.fail,
+        done
+      )
+
   })
 })

@@ -1,14 +1,18 @@
 import Rx, {Observable as O} from "rx"
 import R from "ramda"
+import L_ from "partial.lenses"
 import {makeModelDriver} from "./model"
 
 const keys = x => x ? Object.keys(x) : []
 const extend = Object.assign
+const isFun = x => x && typeof x === "function"
 
 const flattenBy = (list$$, keys, fn) =>
   keys.reduce((acc, k) => ({...acc, [k]: list$$.flatMapLatest(fn(k))}), {})
 
 // ==== public stuff ====
+
+export const L = L_
 
 export const Model = makeModelDriver
 
@@ -25,10 +29,10 @@ export const mergeByKeys = (...objects) => {
 }
 
 export const liftListBy = (function () {
-  const liftListBy = R.curryN(3, function liftListBy(by, list$, it, replay = ["DOM"]) {
+  const liftListBy = R.curryN(3, function liftListBy(identity, list$, it, replay = ["DOM"]) {
     return O.using(() => new Cache(replay), cache => {
       return list$
-        .distinctUntilChanged(items => items.map(item => by(item)), (a, b) => {
+        .distinctUntilChanged(items => items.map(item => identity(item)), (a, b) => {
           if (a.length !== b.length) return false
           for (var i = 0; i < a.length; i++) {
             if (a[i] !== b[i]) return false
@@ -37,11 +41,12 @@ export const liftListBy = (function () {
         })
         .map(items => {
           const itemByKey = {}
-          items.forEach((item, idx) => itemByKey[by(item)] = {item, idx})
+          items.forEach((item, idx) => itemByKey[identity(item)] = {item, idx})
           items.forEach((item, idx) => {
-            const key = by(item)
+            const key = identity(item)
             if (!cache.contains(key)) {
-              cache.put(key, it(key, item, idx), idx)
+              const item$ = isFun(list$.lens) ? list$.lens(L.find(R.compose(R.equals(key), identity))) : null
+              cache.put(key, it(key, item$), idx)
             } else {
               cache.reIndex(key, idx)
             }
