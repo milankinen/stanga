@@ -1,11 +1,10 @@
 import {Observable as O} from "rx"
-import {run} from "@cycle/core"
-import {makeDOMDriver, h} from "@cycle/dom"
+import {h} from "@cycle/dom"
 import isolate from "@cycle/isolate"
-import {Model} from "stanga"
-import Counter from "./Counter"
 
-function main({DOM, M}) {
+import Counter from "../01-counter/Counter"
+
+export default function main({DOM, M}) {
   const state$ = M
   const a$ = state$.lens("a")
   const b$ = state$.lens("b")
@@ -33,8 +32,3 @@ function main({DOM, M}) {
     M: O.merge(M.mod(resetMod$), aMod$, bMod$)
   }
 }
-
-run(main, {
-  DOM: makeDOMDriver("#app"),
-  M: Model({a: 0, b: 0})   // use initial value 0 for both "a" and "b" counters
-})

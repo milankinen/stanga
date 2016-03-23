@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 
-./node_modules/.bin/browserify -t babelify $1/main.js > bundle.js
+./node_modules/.bin/browserify -t babelify $1/index.js > bundle.js
 open index.html

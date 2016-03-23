@@ -1,9 +1,8 @@
 import {Observable as O} from "rx"
-import {run} from "@cycle/core"
-import {makeDOMDriver, h} from "@cycle/dom"
-import {Model} from "stanga"
+import {h} from "@cycle/dom"
 
-function main({DOM, M}) {
+
+export default function main({DOM, M}) {
   const state$ = M
   const incMod$ = DOM.select(".inc")
     .events("click")
@@ -28,7 +27,3 @@ function main({DOM, M}) {
   }
 }
 
-run(main, {
-  DOM: makeDOMDriver("#app"),
-  M: Model(0)   // use initial value 0
-})

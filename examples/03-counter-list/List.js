@@ -1,13 +1,16 @@
 import {Observable as O} from "rx"
-import {run} from "@cycle/core"
-import {makeDOMDriver, h} from "@cycle/dom"
+import {h} from "@cycle/dom"
 import isolate from "@cycle/isolate"
-import {Model, liftListById, flatMerge, flatCombine} from "stanga"
-import Counter from "./Counter"
+import {liftListById, flatMerge, flatCombine} from "stanga"
+
+import Counter from "../01-counter/Counter"
 
 let ID = 0
+export function nextId() {
+  return ID++
+}
 
-function main({DOM, M}) {
+export default function main({DOM, M}) {
   const counters$ = M
   const childSinks$ = liftListById(counters$, (id, counter$) =>
     isolate(Counter, `counter-${id}`)({DOM, M: counter$.lens("val")}))
@@ -15,10 +18,12 @@ function main({DOM, M}) {
   const childVTrees$ = flatCombine(childSinks$, "DOM").DOM
   const childMods$ = flatMerge(childSinks$, "M").M
 
-  const resetMod$ = DOM.select(".reset").events("click")
+  const resetMod$ = DOM.select(".reset")
+    .events("click")
     .map(() => counters => counters.map(c => ({...c, val: 0})))
-  const appendMod$ = DOM.select(".add").events("click")
-    .map(() => counters => [...counters, {id: ID++, val: 0}])
+  const appendMod$ = DOM.select(".add")
+    .events("click")
+    .map(() => counters => [...counters, {id: nextId(), val: 0}])
 
   const vdom$ = O.combineLatest(counters$, childVTrees$, (counters, children) =>
     h("div", [
@@ -38,8 +43,3 @@ function main({DOM, M}) {
 function avg(list) {
   return list.length ? list.reduce((x, y) => x + y, 0) / list.length : 0
 }
-
-run(main, {
-  DOM: makeDOMDriver("#app"),
-  M: Model([{id: ID++, val: 0}, {id: ID++, val: 0}])    // two counters initially
-})
