@@ -65,10 +65,11 @@ Not bad, huh? Let's go forward!
 Now you know how to read the state. Let's take a look how to modify it. Like in Cycle's docs,
 write effects go to sinks - and `Model` driver is not an exception. You may've faced `mod$`
 streams when looking at Cycle's examples. `mod$` is a stream of functions `currentState => newState`,
-that does the actual state modification. Those are the way to modify the `Model` driver's state too.
- 
-`Model` driver's source provides a `.mod` in order to "convert" those modifications into 
-format that driver understands. Let's make the counter editable!
+that perform the actual state modifications. 
+
+`Model` driver uses the same mod functions for state updates. However, they those functions
+must be "converted" into the format that the driver understands. That's why the driver provides
+a `.mod` function to do that conversion. Let's make the counter editable!
 
 ```javascript
 import {Observable as O} from "rx"
@@ -117,17 +118,18 @@ print their total value and provide a way to reset both counters at once?
 
 In the "traditional" approach, the solution might look something like 
 [this](https://gist.github.com/milankinen/cb0e898ae52c61e8d5da)... Whoah! That's
-a lot of stuff with things like proxy subjects stream switching, skipping and
+a lot of stuff with things like proxy subjects, stream switching, skipping and
 concatenation. Let's take a look how one would build the same app with 
 `stanga`'s model driver!
 
 Model driver source has `.lens(Lens)` method that uses internally 
-[partial.lenses](https://github.com/calmm-js/partial.lenses). In order to understand,
-lenses better, you have to take a look at `partial.lenses` docs. For you can just
-treat them like property getter `const a = M.lens("a")` where `a` is a model driver
+[partial.lenses](https://github.com/calmm-js/partial.lenses). In order to understand
+lenses better, you have to take a look at `partial.lenses` docs. For now you can just
+treat them like property getters `const a = M.lens("a")` where `a` is a model driver
 (containing exactly same methods `.mod`, `.set` and `.lens`) **BUT** so that it uses
-the original state's property `.a` - it's a stream that emits the changes only when
-property `a` changes. And modifications with `a.mod(mod$)` change only `a`'s state!
+the original state's property `.a` - it is a stream that emits the changes only when
+property `a` changes. And modifications with `a.mod(mod$)` change only `a`'s state.
+However, because `a` is a part of `M`, also `M` gets changed when `a` changes!!
 
 Let's see how it looks like in the counter example:
 ```javascript 
@@ -170,12 +172,12 @@ run(main, {
 })
 ```
 
-As you can see, there is **no modifications** to the original `Counter` component!
+As you can see, there is **no changes** to the original `Counter` component!
 And no switching, proxying or other "advanced" stuff. In the end, the problem is 
 not advanced - just some simple stream processing!
 
 Note that you can pass lensed sub-states directly to sub-component as a model driver
-and merge the modification sinks to parent's modifications like any like you'd merge
+and merge the `mod$` sinks to parent's `mod$`'es like any like you'd merge
 any other stream. *And this is the core pattern of `stanga` that gets repeated 
 everywhere.* Once you get it, you'll be able to create complex apps like they were
 as simple as the previous counter app.
@@ -185,7 +187,7 @@ as simple as the previous counter app.
 #### Lifting list observable to observable of sinks
 
 Lists are a little bit more complicated thing. If you don't believe, just take a
-look at cycle's advanced list example! ...just kidding! With `stanga`, list processing
+look at cycle's advanced list example... just kidding! With `stanga`, list processing
 is *almost*  as easy as processing props. 
 
 What is "list state"? It's an observable emitting events that contain arrays 
@@ -195,8 +197,8 @@ list processing extremely easy.
 
 `liftListById` is most powerful of those functions - it conceals many performance
 optimizations, caching, cold->hot observable conversions and event replaying that
-you'd normally need to do yourself. Now all you need is just an `id` in your list
-items! Conceptually `liftListById` is almost like 
+you'd normally need to do by yourself. Now all you need is just an `id` in your list
+items! Conceptually `liftListById` is almost like (but bumped with steroids :muscle:):
 ```javascript 
 const liftListById = fn => list$.map(items => items.map(item => fn(item.id, item)))
 ``` 
@@ -204,7 +206,7 @@ const liftListById = fn => list$.map(items => items.map(item => fn(item.id, item
 The transformer function that is passed to `liftListById` should invoke some (child)
 component function and return the sinks from the child component. The transformer
 function receives item id as a first parameter and if you are lifting model
-(returned by e.g. `M.lens("items")`), the function receives also second parameter
+(e.g. `M` or `M.lens("items")`), the function receives also second parameter
 which is the *lensed item state*. 
 
 The code is far more simpler than the explanation:
@@ -226,10 +228,10 @@ run(main, {
 })
 ```
 
-Note that `counter$` is a model (containing model's state observable) that
-can be passed to child component directly. `Counter` component expects the
-model to be an integer (counter's value) so we need to get the value by
-using lens (should be nothing new here, huh?).
+Note that `counter$` is a model that can be passed to child component directly
+as a model driver. `Counter` component expects the model to be an integer 
+(counter's value) so we need to get the value by using lens (should be nothing 
+new here, huh?).
 
 #### Extracting values from the lifted sinks
 
