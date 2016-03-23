@@ -433,10 +433,10 @@ const out = flatMerge(sinks$$, "HTTP", "M")
 // => {HTTP: Observable req, M: Observable mod}
 ```
 
-#### `mergeByKey` 
+#### `mergeByKeys` 
 
 ```
-mergeByKey :: (...{string: Observable}) => {string: Observable}
+mergeByKeys :: (...{string: Observable}) => {string: Observable}
 ```
 
 Takes `1..n` sink-like objects and merges the sink observables having same key. The
