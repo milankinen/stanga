@@ -144,7 +144,7 @@ function main({DOM, M}) {
   const a = isolate(Counter)({DOM, M: a$})
   const b = isolate(Counter)({DOM, M: b$})
 
-  const resetMod$ = DOM.select(".reset").events("click").map(() => ({a: 0, b: 0}))
+  const resetMod$ = DOM.select(".reset").events("click").map(() => () => ({a: 0, b: 0}))
   const aMod$ = a.M
   const bMod$ = b.M
 
@@ -298,24 +298,28 @@ function main({DOM, M}) {
   const childVTrees$ = flatCombine(childSinks$, "DOM").DOM
   const childMods$ = flatMerge(childSinks$, "M").M 
   
-  const resetMod$ = DOM.events(".reset").events("click")
+  const resetMod$ = DOM.select(".reset").events("click")
     .map(() => counters => counters.map(c => ({...c, val: 0})))
-  const appendMod$ = DOM.events(".add").events("click")
+  const appendMod$ = DOM.select(".add").events("click")
     .map(() => counters => [...counters, {id: ID++, val: 0}])
   
-  const vdom$ = O.combineLatest(counters$, childVTrees$, (state, children) =>
+  const vdom$ = O.combineLatest(counters$, childVTrees$, (counters, children) =>
     h("div", [
-      h("ul", children.map(child => h("li", [child])))
+      h("ul", children.map(child => h("li", [child]))),
       h("hr"),
-      h("h2", `Total: ${state.a + state.b}`),
+      h("h2", `Avg: ${avg(counters.map(c => c.val)).toFixed(2)}`),
       h("button.reset", "Reset"),
-      h("button.add", )
+      h("button.add", "Add counter")
     ]))
 
   return {
     DOM: vdom$,
     M: O.merge(M.mod(resetMod$), M.mod(appendMod$), childMods$)
   }
+}
+
+function avg(list) {
+  return list.length ? list.reduce((x, y) => x + y, 0) / list.length : 0
 }
 
 run(main, {
