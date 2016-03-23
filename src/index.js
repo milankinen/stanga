@@ -1,5 +1,5 @@
 import Rx, {Observable as O} from "rx"
-import R from "ramda"
+import R_ from "ramda"
 import L_ from "partial.lenses"
 import {makeModelDriver} from "./model"
 
@@ -11,6 +11,8 @@ const flattenBy = (list$$, keys, fn) =>
   keys.reduce((acc, k) => ({...acc, [k]: list$$.flatMapLatest(fn(k))}), {})
 
 // ==== public stuff ====
+
+export const R = R_
 
 export const L = L_
 
