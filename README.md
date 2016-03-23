@@ -183,7 +183,160 @@ as simple as the previous counter app.
 
 ### Processing list states by using lenses (again)
 
-TODO...
+#### Lifting list observable to observable of sinks
+
+Lists are a little bit more complicated thing. If you don't believe, just take a
+look at cycle's advanced list example! ...just kidding! With `stanga`, list processing
+is *almost*  as easy as processing props. 
+
+What is "list state"? It's an observable emitting events that contain arrays 
+with arbitrary number of items. If those items have an **unique key** (e.g. `id`),
+`stanga` provides `liftListById`, `flatCombine` and `flatMerge` that make the
+list processing extremely easy.
+
+`liftListById` is most powerful of those functions - it conceals many performance
+optimizations, caching, cold->not observable conversions and event replaying that
+you'd normally need to do yourself. Now all you need is just an `id` in your list
+items! Conceptually `liftListById` is almost like 
+```javascript 
+const liftListById = fn => list$.map(items => items.map(item => fn(item.id, item)))
+``` 
+
+The transformer function that is passed to `liftListById` should invoke some (child)
+component function and return the sinks from the child component. The transformer
+function receives item id as a first parameter and if you are lifting model
+(returned by e.g. `M.lens("items")`), the function receives also second parameter
+which is the *lensed item state*. 
+
+The code is far more simpler than the explanation:
+```javascript
+import {liftListById} from "stanga"
+
+let ID = 0
+
+function main({DOM, M}) {
+  const counters$ = M
+  const childSinks$ = liftListById(counters$, (id, counter$) =>
+    isolate(Counter, `counter-${id}`)({DOM, M: counter$.lens("val")}))
+  // ...
+}
+
+run(main, {
+  DOM: makeDOMDriver("#app"),
+  M: Model([{id: ID++, val: 0}, {id: ID++, val: 0}])    // two counters initially
+})
+```
+
+Note that `counter$` is a model (containing model's state observable) that
+can be passed to child component directly. `Counter` component expects the
+model to be an integer (counter's value) so we need to get the value by
+using lens (should be nothing new here, huh?).
+
+#### Extracting values from the lifted sinks
+
+Well.. now you have an observable that emits events of list of sinks and you
+should "extract" values from those child sinks somehow. Basically there are
+two different kind of strategies: combining and merging. 
+
+In combine strategy, you pick some of the sinks and combine their latest 
+values by using `Observable.combineLatest`. As a result, you get a list 
+observable containing the latest values from child sinks. Usually you want
+to apply this extraction strategy to `DOM` sinks so that you get a nice
+array of child virtual-dom trees that you can post-process in your parent
+component (maybe add more virtual-dom around children?).
+
+To use the combine strategy, import `flatCombine` from `stanga` and define
+the sinks you want to "extract and combine" - the returned value is an
+"sink-like" object containing the extracted sinks as keys and their list 
+observables as values. Again, the actual code is simpler than the explanation:
+```javascript
+function main({DOM, M}) {
+  const counters$ = M
+  const childSinks$ = liftListById(counters$, (id, counter$) =>
+    isolate(Counter, `counter-${id}`)({DOM, M: counter$.lens("val")}))
+  // you can also extract multiple keys, e.g. flatCombine(childSinks$, "DOM", "foo", "bar")
+  const children = flatCombine(childSinks$, "DOM")
+  // extracted children.DOM is now a normal observable containing an array of 
+  // children vtrees
+  const vdom$ = children.DOM.map(childVTrees =>
+    h("ul", childVTrees.map(child => h("li", [child]))))
+  ...
+}
+``` 
+
+Merge strategy behaves almost like combine strategy but instead of combining
+an array from child sinks, the child sinks are *merged* by using 
+`Observable.merge`. This is ideal for sinks containing actions (like 
+`HTTP` requests or `M` mods):
+```javascript
+function main({DOM, M}) {
+  const counters$ = M
+  const childSinks$ = liftListById(counters$, (id, counter$) =>
+    isolate(Counter, `counter-${id}`)({DOM, M: counter$.lens("val")}))
+  const vdom$ = ...  
+  const childSinks = flatMerge(childSinks$, "M")
+  return {
+    DOM: vdom$,
+    M: childSinks.M 
+  }
+}
+```
+
+Let's combine those and create the "counter list" component:
+```javascript
+let ID = 0
+
+function Counter({DOM, M}) {
+  // NOT CHANGED!
+}
+
+function main({DOM, M}) {
+  const counters$ = M
+  const childSinks$ = liftListById(counters$, (id, counter$) =>
+    isolate(Counter, `counter-${id}`)({DOM, M: counter$.lens("val")}))
+  
+  const childVTrees$ = flatCombine(childSinks$, "DOM").DOM
+  const childMods$ = flatMerge(childSinks$, "M").M 
+  
+  const resetMod$ = DOM.events(".reset").events("click")
+    .map(() => counters => counters.map(c => ({...c, val: 0})))
+  const appendMod$ = DOM.events(".add").events("click")
+    .map(() => counters => [...counters, {id: ID++, val: 0}])
+  
+  const vdom$ = O.combineLatest(counters$, childVTrees$, (state, children) =>
+    h("div", [
+      h("ul", children.map(child => h("li", [child])))
+      h("hr"),
+      h("h2", `Total: ${state.a + state.b}`),
+      h("button.reset", "Reset"),
+      h("button.add", )
+    ]))
+
+  return {
+    DOM: vdom$,
+    M: O.merge(M.mod(resetMod$), M.mod(appendMod$), childMods$)
+  }
+}
+
+run(main, {
+  DOM: makeDOMDriver("#app"),
+  M: Model([{id: ID++, val: 0}, {id: ID++, val: 0}])    // two counters initially
+})
+```
+
+Congrats! Now you know how to create complex apps with Cycle and `stanga`. 
+The rest is just composing and combining the basic cases we just covered. If 
+you didn't get it now, don't worry - read this tutorial again (and again) and
+take a look at the examples. It might take some time to learn this all new 
+stuff like lenses and modifications but it's definitely worth it!
+
+### DRYing the sinks
+
+TODO... `mergeByKeys` 
+
+### Advanced: playing with lenses
+
+TODO... `L.default` `L.augment`
 
 
 ## API Reference
