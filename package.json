@@ -1,6 +1,6 @@
 {
   "name": "stanga",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": false,
   "description": "The essential Cycling gear every Cyclist needs. Crafted with care. For easier rides.",
   "main": "lib/index.js",
