@@ -110,7 +110,7 @@ If you want to completely override the state, Model driver provides `.set` metho
 which takes a stream of values (instead of mod functions!) and resets the state by
 using those values (i.e. shorthand to `M.mod(value$.map(value => () => value))`).
 
-### Getting some sub-state by using lenses
+### Accessing sub-states by using lenses
 
 Nothing new? All of that could've done by using "traditional" Cycle approach, you
 might think. Yes, true. But let's go forward. How about if you must have two counters,
@@ -348,7 +348,7 @@ import {Model} from "stanga"
 
 Initializes new model (driver) that can be used with `run`
 ```
-Model :: (initialState, opts) => ModelDriver`
+Model :: (initialState, opts) => ModelDriver
 ```
 Initial state can be anything, usually it should be a valid JSON datatype 
 (object, array, number, bool, string...). Valid options are:
