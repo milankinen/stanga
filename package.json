@@ -23,9 +23,10 @@
     "mocha": "mocha --compilers js:babel-register -s 500",
     "dist": "mkdir -p lib && rm -rf lib/* && babel src --out-dir lib"
   },
+  "dependencies": {
+    "partial.lenses": "1.x"
+  },
   "peerDependencies": {
-    "partial.lenses": "1.x",
-    "ramda": "*",
     "rx": "4.x"
   },
   "devDependencies": {
