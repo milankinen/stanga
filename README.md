@@ -12,10 +12,9 @@ The essential Cycling gear every Cyclist needs. Crafted with care. For easier ri
 **[Cycle.js](http://cycle.js.org)** does great job when the application is simple. However,
 when the application complexity grows, trivial things become non-trivial very quickly.
 The tutorials and examples don't have any common patterns or best practices to deal with
-these complex situations and developers are by their own.
-
-This library aims to give some tried-and-tests, "battle-proven" functions and utilities 
-to solve these problems so that you can build your complex Cycle application faster and easier.
+these complex situations and developers are by their own. The goal of this library is to 
+provide some tried-and-tested, "battle-proven" utilities to solve these problems so that 
+you can focus on building your Cycle application.
 
 The origin of these utilities comes from **[CALM^2](https://github.com/calmm-js)**, but
 they're applicable to Cycle codebase easily (with minor modifications) because the 
@@ -331,21 +330,123 @@ run(main, {
 Congrats! Now you know how to create complex apps with Cycle and `stanga`. 
 The rest is just composing and combining the basic cases we just covered. If 
 you didn't get it now, don't worry - read this tutorial again (and again) and
-take a look at the examples. It might take some time to learn this all new 
-stuff like lenses and modifications but it's definitely worth it!
-
-### DRYing the sinks
-
-TODO... `mergeByKeys` 
-
-### Advanced: playing with lenses
-
-TODO... `L.default` `L.augment`
+take a look at the examples. It might take some time to learn these all new 
+things like lenses and modifications but it's definitely worth it!
 
 
 ## API Reference
 
-TODO...
+All utilities can be imported from `stanga` package by using CommonJS
+compatible bundler (like Browserify or Webpack), e.g.
+```javascript
+import {Model} from "stanga"
+```
+
+#### `Model`
+
+Initializes new model (driver) that can be used with `run`
+```
+Model :: (initialState, opts) => ModelDriver`
+```
+Initial state can be anything, usually it should be a valid JSON datatype 
+(object, array, number, bool, string...). Valid options are:
+
+* `logging` enable state logging (default `false`) 
+* `warn` override console warning function (default `console.warn`)
+* `info` override console info function (default `console.info`) 
+
+#### `L`
+
+Just a reference to the underlying **[partial.lenses](https://github.com/calmm-js/partial.lenses)**
+implementation.
+
+#### `R`
+
+Just a reference to the underlying **[ramda](http://ramdajs.com/)**
+implementation.
+
+#### `liftListById` 
+
+```
+liftListById :: (Observable [A{id, ...}], (id => {string: Observable B}), replay = ["DOM"]) => Observable [{string: Observable B}]
+liftListById :: (Lens [A{id, ..}], (id, Lens A => {string: Observable B}), replay = ["DOM"]) => Observable [{string: Observable B}]
+```
+
+Takes a list observable (whose items have `id` property) and mapper function, applies 
+mapper function to each list item and returns a list observable by using the return 
+values from the mapper function (conceptually same as `list$.map(items => items.map(...))`).
+
+* Item ids **must be unique within the list**.
+* Mapper function must return "sink-like" objects (JSON object having only Observable values)
+
+If the list observable is a lensed observable (got by using `Model.lens(...)`), then the
+mapper function receives also second parameter which is the lensed item associated to the
+id (first parameter).
+
+By default, DOM sinks are replayed and other sinks are multicasted. If you want to add 
+more replayed sinks, you can override the third parameter which is an array of strings
+indicating sink keys that should be replayed.
+
+**ATTENTION:** mapper function is applied only **once** per item (by `id`), although the
+list observable emits multiple values. This enables some heavy performance optimizations
+to the list processing like duplicate detection, cold->hot observable conversion and
+caching.
+
+#### `listListBy`
+
+```
+liftListById :: ((A => identity), Observable [A], (identity => {string: Observable B}), replay = ["DOM"]) => Observable [{string: Observable B}]
+liftListById :: ((A => identity), Lens [A], (identity, Lens A => {string: Observable B}), replay = ["DOM"]) => Observable [{string: Observable B}]
+```
+
+Same as `liftListById` but allows user to define custom identity function instead of
+using `id` property. This function is curried so you can create your own `liftListByX`
+by passing only the first parameter
+```javascript
+const liftListByTsers = liftListBy(item => item.tsers)
+```
+
+#### `flatCombine` 
+
+```
+flatCombine :: (Observable [{string: Observable A}], ...string) => {string: Observable [A]}
+``` 
+
+Takes an list observable of "sink-like" objects (JSON object having Observable values),
+plucks sinks by using using the given keys and combines the plucked sinks by using 
+`Observable.combineLatest` 
+```javascript
+const out = flatCombine(sinks$$, "DOM") // out = {DOM: Observable [vdom1, vdom2, ....]} 
+out.DOM.map(childVTrees => h("div", ...)))
+``` 
+
+#### `flatMerge` 
+
+```
+flatMerge :: (Observable [{string: Observable A}], ...string) => {string: Observable A}
+```
+
+Same as `flatCombine` but uses `Observable.merge` instead of `combineLatest`, thus
+resulting an observable of values instead of an observable of lists
+```javascript
+const out = flatMerge(sinks$$, "HTTP", "M")
+// => {HTTP: Observable req, M: Observable mod}
+```
+
+#### `mergeByKey` 
+
+```
+mergeByKey :: (...{string: Observable}) => {string: Observable}
+```
+
+Takes `1..n` sink-like objects and merges the sink observables having same key. The
+result object contains keys that appear in *any* of the given sink objects
+```javascript
+const a = {HTTP: O.just(req), DOM: O.just(vdom)}
+const b = {DOM: O.just(vdom), M: O.just(mod)}
+const merged = mergeByKey(a, b)
+// => {HTTP: Observable req, DOM: Observable vdom, M: Observable mod}
+```
 
 
 ## License
