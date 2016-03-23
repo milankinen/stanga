@@ -195,7 +195,7 @@ with arbitrary number of items. If those items have an **unique key** (e.g. `id`
 list processing extremely easy.
 
 `liftListById` is most powerful of those functions - it conceals many performance
-optimizations, caching, cold->not observable conversions and event replaying that
+optimizations, caching, cold->hot observable conversions and event replaying that
 you'd normally need to do yourself. Now all you need is just an `id` in your list
 items! Conceptually `liftListById` is almost like 
 ```javascript 
