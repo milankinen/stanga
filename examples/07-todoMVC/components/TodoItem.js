@@ -1,24 +1,23 @@
-import {Observable as O} from "rx"
-import {button, div, input, label, li} from "@cycle/dom"
-import {propHook, ENTER_KEY, ESC_KEY} from "../utils"
-import {toggleTodo, startTodoEdit, cancelTodoEdit, doneTodoEdit, destroyFromList} from "../actions"
+import { Observable as O } from "rx"
+import { button, div, input, label, li } from "@cycle/dom"
+import { propHook, ENTER_KEY, ESC_KEY } from "../utils"
+import { toggleTodo, startTodoEdit, cancelTodoEdit, doneTodoEdit, destroyFromList } from "../actions"
 
 
-export function TodoItem({DOM, M, parentM}) {
-  const state$ = M
-  const intents = intent(DOM, state$)
+export function TodoItem({DOM, M, listM}) {
+  const intents = intent(DOM, M)
 
   const mod$ = O.merge(
     M.mod(intents.toggleTodo$.map(toggleTodo)),
     M.mod(intents.startTodoEdit$.map(startTodoEdit)),
     M.mod(intents.cancelTodoEdit$.map(cancelTodoEdit)),
     M.mod(intents.doneTodoEdit$.map(doneTodoEdit)),
-    parentM.mod(intents.destroyFromList$.map(destroyFromList)),
+    listM.mod(intents.destroyFromList$.map(destroyFromList)),
   )
 
   return {
     M: mod$,
-    DOM: view(state$)
+    DOM: view(M)
   }
 }
 export default TodoItem

@@ -9,7 +9,7 @@ export function TodoList ({ DOM, M }) {
     return isolate(TodoItem, `item-${id}`)({
       DOM,
       M: todoItem$,
-      parentM: M.lens("list")
+      listM: M.lens("list")
     })
   }
 
@@ -19,10 +19,10 @@ export function TodoList ({ DOM, M }) {
   )).shareReplay(1)
 
   return {
+    M: flatMerge(todoItems$, "M").M,
     DOM: flatCombine(todoItems$, "DOM").DOM
       .map(R.reverse)
-      .map(items => ul(".todo-list", items)),
-    M: flatMerge(todoItems$, "M").M
+      .map(items => ul(".todo-list", items))
   }
 }
 export default TodoList

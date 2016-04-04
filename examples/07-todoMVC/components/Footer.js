@@ -3,6 +3,9 @@ import { clearCompleted } from "../actions"
 import { R, L } from "stanga"
 
 export function Footer({DOM, M}) {
+  const intents = intent(DOM)
+  const mod$ = M.lens("list").mod(intents.clearCompleted$.map(clearCompleted))
+
   const state$ = M.lens(L.compose(
     L.augment({
       amountCompleted: ({list}) => list
@@ -13,8 +16,6 @@ export function Footer({DOM, M}) {
       amountActive: ({list, amountCompleted}) => list.length - amountCompleted
     })
   ))
-  const intents = intent(DOM)
-  const mod$ = M.lens("list").mod(intents.clearCompleted$.map(clearCompleted))
 
   return {
     M: mod$,

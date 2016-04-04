@@ -16,7 +16,7 @@ export function Header({DOM, M}) {
 
   return {
     M: mod$,
-    DOM: M.lens("draft").map(draft =>
+    DOM: M.map(({draft}) =>
       header(".header", [
         h1("todos"),
         input(".new-todo", {
