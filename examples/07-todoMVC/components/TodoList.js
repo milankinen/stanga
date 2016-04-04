@@ -2,6 +2,7 @@ import isolate from "@cycle/isolate"
 import TodoItem from "./TodoItem"
 import { liftListById, flatCombine, flatMerge, R, L } from "stanga"
 import { ul } from "@cycle/dom"
+import { getFilterFn } from "../utils"
 
 export function TodoList ({ DOM, M }) {
   const liftTodoItem = (id, todoItem$) => {
@@ -12,9 +13,10 @@ export function TodoList ({ DOM, M }) {
     })
   }
 
-  let todoItems$ = M.flatMap(state =>
-    liftListById(M.lens("list").lens(L.filter(state.filterFn)), liftTodoItem)
-  )
+  const todoItems$ = M.flatMapLatest(({filterName}) => liftListById(
+    M.lens("list").lens(L.filter(getFilterFn(filterName))),
+    liftTodoItem
+  )).shareReplay(1)
 
   return {
     DOM: flatCombine(todoItems$, "DOM").DOM

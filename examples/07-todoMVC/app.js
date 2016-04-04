@@ -1,6 +1,6 @@
 import { run } from "@cycle/core"
-import { makeDOMDriver, footer, div, p, section } from "@cycle/dom"
 import { Observable as O } from "rx"
+import { makeDOMDriver, footer, div, p, section } from "@cycle/dom"
 import storageDriver from "@cycle/storage"
 import { Model } from "stanga"
 
@@ -15,16 +15,16 @@ run(main, {
     {id: 3, title: "Cycle x Stanga <3"},
     {id: 2, title: "World !", completed: true},
     {id: 1, title: "Hello"}
-  ], filter: "", filterFn: () => {}}),
+  ], filterName: ""}),
 
   DOM: makeDOMDriver("#app"),
-  initialHash: () => O.just(window.location.hash), // eslint-disable-line no-undef
-  hashchange: () => O.fromEvent(window, "hashchange"), // eslint-disable-line no-undef
+  hash: () => O.just("")
+    .concat(O.fromEvent(window, "hashchange")) // eslint-disable-line no-undef
+    .map(() => window.location.hash.replace("#", "")), // eslint-disable-line no-undef
   storage: storageDriver
 })
 
-function main({DOM, M, hashchange, initialHash, storage}) {
-  const intents = intent({ hashchange, initialHash })
+function main({DOM, M, hash, storage}) {
   const initialState$ = deserialize(storage.local
     .getItem("todos-cycle")
     .take(1)
@@ -40,7 +40,7 @@ function main({DOM, M, hashchange, initialHash, storage}) {
   const todos = Todos({DOM, M})
   const mod$ = O.merge(
     M.set(initialState$),
-    M.mod(intents.routeChange$.map(changeFilter)),
+    M.mod(hash.map(changeFilter)),
     todos.M
   )
 
@@ -55,14 +55,4 @@ function main({DOM, M, hashchange, initialHash, storage}) {
       ])
     ]),
   )}
-}
-
-function intent ({ hashchange, initialHash }) {
-  return {
-    routeChange$: O.concat(
-        initialHash.map(hash => hash.replace("#", "")),
-        hashchange.map(ev => ev.newURL.match(/\#[^\#]*$/)[0].replace("#", ""))
-      )
-      .startWith("/")
-  }
 }

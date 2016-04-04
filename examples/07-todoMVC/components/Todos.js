@@ -4,25 +4,27 @@ import Header from "./Header"
 import TodoList from "./TodoList"
 import Footer from "./Footer"
 import { toggleAll } from "../actions"
+import { L, R } from "stanga"
 
 function Todos({DOM, M}) {
-  const todoList = TodoList({DOM, M})
-  const header = Header({DOM, M})
-  const footer = Footer({DOM, M})
+  const state$ = M.lens(L.augment({
+    allCompleted: ({list}) => list.every(R.prop("completed"))
+  }))
 
-  const intents = intent(DOM)
+  const todoList = TodoList({DOM, M: M.lens(L.props("filterName", "list"))})
+  const header = Header({DOM, M: M.lens(L.props("draft", "list"))})
+  const footer = Footer({DOM, M: M.lens(L.props("filterName", "list"))})
+
+  const intents = intent({DOM})
   const mod$ = M.lens("list").mod(intents.toggleAll$.map(toggleAll))
 
   return {
-    DOM: O.combineLatest(
-      M.lens("list"),
-      todoList.DOM,
-      (list, todoListDOM) =>
-        div([
-          header.DOM,
-          renderMainSection(list, [todoListDOM]),
-          footer.DOM
-        ])
+    DOM: state$.map(state =>
+      div([
+        header.DOM,
+        renderMainSection(state, [todoList.DOM]),
+        footer.DOM
+      ])
     ),
     M: O.merge(header.M, todoList.M, footer.M, mod$)
   }
@@ -30,17 +32,16 @@ function Todos({DOM, M}) {
 
 export default Todos
 
-function intent (DOM) {
+function intent ({DOM}) {
   return {
     toggleAll$: DOM.select(".toggle-all").events("change")
   }
 }
 
-function renderMainSection(state, children) {
-  let allCompleted = state.every(task => task.completed)
+function renderMainSection({list, allCompleted}, children) {
   return section(
     ".main",
-    { style: {"display": state.length ? "" : "none"} },
+    { style: {"display": list.length ? "" : "none"} },
     [
       input(".toggle-all", {
         type: "checkbox",

@@ -29,20 +29,10 @@ export function destroyFromList ({id}) {
   return (list) => list.filter(({id: _id}) => _id !== id)
 }
 export function changeFilter (route) {
-  const filterFn = getFilterFn(route)
   return ({...model}) => ({
     ...model,
-    filter: route.replace("/", "").trim(),
-    filterFn
+    filterName: route.replace("/", "").trim()
   })
-
-  function getFilterFn(route) {
-    switch (route) {
-      case "/active": return (task => !task.completed)
-      case "/completed": return (task => task.completed === true)
-      default: return () => true // allow anything
-    }
-  }
 }
 export function createTodo({title}) {
   return (taskList) => {

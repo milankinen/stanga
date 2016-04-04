@@ -1,13 +1,12 @@
+/* ADD STYLESHEETS */
 appendStylesheets()
 
-// run app
+// then run app
 import "./app.js"
 
 
 
 
-
-/* ADD STYLESHEETS */
 function appendStylesheets () {
   const head  = document.getElementsByTagName("head")[0] // eslint-disable-line no-undef
 

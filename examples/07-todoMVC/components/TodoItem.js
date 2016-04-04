@@ -5,7 +5,7 @@ import {toggleTodo, startTodoEdit, cancelTodoEdit, doneTodoEdit, destroyFromList
 
 
 export function TodoItem({DOM, M, parentM}) {
-  const state$ = M.startWith({title: "", completed: false})
+  const state$ = M
   const intents = intent(DOM, state$)
 
   const mod$ = O.merge(
@@ -43,7 +43,7 @@ function intent(DOM, state$) {
 
     destroyFromList$: DOM.select(".destroy")
       .events("click")
-      .combineLatest(state$, (_, {id}) => ({id}))
+      .withLatestFrom(state$, (_, {id}) => ({id}))
   }
 }
 
@@ -56,7 +56,7 @@ function view(state$) {
       div(".view", [
         input(".toggle", {
           type: "checkbox",
-          checked: propHook(elem => elem.checked = completed)
+          checked: completed
         }),
         label(title),
         button(".destroy")
