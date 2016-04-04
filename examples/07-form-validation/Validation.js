@@ -12,7 +12,7 @@ export const validate = (form$, spec) => {
   const mods$ = O.merge(R.toPairs(spec)
     .map(([field, validate]) => {
       const field$ = form$.lens(field)
-      return field$.lens("errors").set(field$.lens("value").flatMapLatest(validate).do(x => console.log(x)))
+      return field$.lens("errors").set(field$.lens("value").flatMapLatest(validate))
     }))
     .share()
   const isValid$ = O

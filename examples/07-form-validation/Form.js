@@ -84,7 +84,6 @@ export default function main(sources) {
 
   const submit$ = form$
     .pluck("values")
-    .do(x => console.log(x))
     .map(R.compose(R.join("\n"), R.map(([k, v]) => `${k}=${v}`), R.toPairs))
     .sample(DOM.select(".submit").events("click").do(e => e.preventDefault()))
 
