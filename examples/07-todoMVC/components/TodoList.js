@@ -1,22 +1,14 @@
 import isolate from "@cycle/isolate"
 import TodoItem from "./TodoItem"
-import { liftListById, flatCombine, flatMerge, R, L } from "stanga"
+import { liftListById, flatCombine, flatMerge, R } from "stanga"
 import { ul } from "@cycle/dom"
-import { getFilterFn } from "../utils"
 
 export function TodoList ({ DOM, M }) {
-  const liftTodoItem = (id, todoItem$) => {
-    return isolate(TodoItem, `item-${id}`)({
-      DOM,
-      M: todoItem$,
-      listM: M.lens("list")
-    })
-  }
+  const todoItems$ = liftListById(M, (id, todoItem$) => {
+    const isolatedTodoItem = isolate(TodoItem, `item-${id}`)
 
-  const todoItems$ = M.flatMapLatest(({filterName}) => liftListById(
-    M.lens("list").lens(L.filter(getFilterFn(filterName))),
-    liftTodoItem
-  )).shareReplay(1)
+    return isolatedTodoItem({DOM, M: todoItem$, listM: M})
+  })
 
   return {
     M: flatMerge(todoItems$, "M").M,

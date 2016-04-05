@@ -47,11 +47,10 @@ function intent(DOM, state$) {
 }
 
 function view(state$) {
-  return state$.map(({title, completed, editing}) => {
+  return state$.map(({title, completed, editing, id}) => {
     const completedClass = (completed ? ".completed" : "")
     const editingClass = (editing ? ".editing" : "")
-
-    return li(`.todoRoot${completedClass}${editingClass}`, [
+    return li(`.todoRoot${completedClass}${editingClass}`, {key: id}, [
       div(".view", [
         input(".toggle", {
           type: "checkbox",

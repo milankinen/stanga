@@ -5,9 +5,19 @@ import TodoList from "./TodoList"
 import Footer from "./Footer"
 import { toggleAll } from "../actions"
 import { L, R } from "stanga"
+import { getFilterFn } from "../utils"
 
 function Todos({DOM, M}) {
-  const todoList = TodoList({DOM, M: M.lens(L.props("filterName", "list"))})
+
+  const filteredList$ = M.lens(L.lens(
+    model => ({
+      ...model,
+      list: model.list.filter(getFilterFn(model.filterName))
+    }),
+    R.identity // the setter method is needed so that we can update the list later
+  )).lens("list")
+  const todoList = TodoList({DOM, M: filteredList$})
+
   const header = Header({DOM, M: M.lens(L.props("draft", "list"))})
   const footer = Footer({DOM, M: M.lens(L.props("filterName", "list"))})
 
