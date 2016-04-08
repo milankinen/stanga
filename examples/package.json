@@ -22,6 +22,7 @@
     "babel-preset-stage-2": "^6.5.0",
     "babelify": "^7.2.0",
     "browserify": "^13.0.0",
+    "cycle-snabbdom": "^1.2.1",
     "partial.lenses": "^1.4.1",
     "ramda": "^0.19.1",
     "rx": "^4.1.0",

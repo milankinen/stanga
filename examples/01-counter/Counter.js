@@ -1,5 +1,5 @@
 import {Observable as O} from "rx"
-import {h} from "@cycle/dom"
+import {h} from "cycle-snabbdom"
 
 
 export default function main({DOM, M}) {

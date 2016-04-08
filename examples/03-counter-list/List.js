@@ -1,5 +1,5 @@
 import {Observable as O} from "rx"
-import {h} from "@cycle/dom"
+import {h} from "cycle-snabbdom"
 import isolate from "@cycle/isolate"
 import {liftListById, flatMerge, flatCombine} from "stanga"
 
@@ -25,9 +25,17 @@ export default function main({DOM, M}) {
     .events("click")
     .map(() => counters => [...counters, {id: nextId(), val: 0}])
 
+  const rmMod$ = DOM.select(".rm")
+    .events("click")
+    .map(ev => Number(ev.target.getAttribute("data-idx")))
+    .map(idx => counters => counters.filter((_, i) => i !== idx))
+
   const vdom$ = O.combineLatest(counters$, childVTrees$, (counters, children) =>
     h("div", [
-      h("ul", children.map(child => h("li", [child]))),
+      h("ul", children.map((child, idx) => h("li", [
+        child,
+        h("button.rm", {attrs: {"data-idx": idx}}, "Remove")
+      ]))),
       h("hr"),
       h("h2", `Avg: ${avg(counters.map(c => c.val)).toFixed(2)}`),
       h("button.reset", "Reset"),
@@ -36,7 +44,7 @@ export default function main({DOM, M}) {
 
   return {
     DOM: vdom$,
-    M: O.merge(M.mod(resetMod$), M.mod(appendMod$), childMods$)
+    M: O.merge(M.mod(resetMod$), M.mod(appendMod$), M.mod(rmMod$), childMods$)
   }
 }
 
