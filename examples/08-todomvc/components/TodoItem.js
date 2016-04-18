@@ -12,7 +12,7 @@ export function TodoItem({DOM, M, listM}) {
     M.mod(intents.startTodoEdit$.map(startTodoEdit)),
     M.mod(intents.cancelTodoEdit$.map(cancelTodoEdit)),
     M.mod(intents.doneTodoEdit$.map(doneTodoEdit)),
-    listM.mod(intents.destroyFromList$.map(destroyFromList)),
+    listM.mod(intents.destroyFromList$.map(destroyFromList))
   )
 
   return {

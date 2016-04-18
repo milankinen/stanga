@@ -10,7 +10,7 @@ export function Header({DOM, M}) {
     M.lens("draft").set(O.merge(
       intents.update$.map(x => x),
       intents.create$.map(() => ""),
-      intents.reset$.map(() => ""),
+      intents.reset$.map(() => "")
     ))
   )
 
