@@ -1,28 +1,49 @@
-/* ADD STYLESHEETS */
-appendStylesheets()
+import { Observable as O } from "rx"
+import { run } from "@cycle/core"
+import { makeDOMDriver } from "@cycle/dom"
+import { Model } from "stanga"
 
-// then run app
-import "./app.js"
+import TodoMVC from "./App"
 
 
+const head = document.getElementsByTagName("head")[0]
+const cssUrls = [
+  "node_modules/todomvc-common/base.css",
+  "node_modules/todomvc-app-css/index.css"
+]
+
+cssUrls
+  .map(createStyleSheet)
+  .forEach(head.appendChild.bind(head))
 
 
-function appendStylesheets () {
-  const head  = document.getElementsByTagName("head")[0] // eslint-disable-line no-undef
-
-  const styleSheets = [
-    createStyleSheet("node_modules/todomvc-common/base.css"),
-    createStyleSheet("node_modules/todomvc-app-css/index.css")
-  ]
-  styleSheets.forEach(link => head.appendChild(link))
+const initialState = {
+  list: [
+    {id: 3, title: "Cycle x Stanga <3"},
+    {id: 2, title: "World !", completed: true},
+    {id: 1, title: "Hello"}
+  ],
+  filterName: ""
 }
 
-function createStyleSheet (url) {
-  const link  = document.createElement("link") // eslint-disable-line no-undef
-  link.rel  = "stylesheet"
+run(TodoMVC, {
+  M: Model(initialState),
+  DOM: makeDOMDriver("#app"),
+  hash: () =>
+    O.fromEvent(window, "hashchange")
+      .map(windowHash)
+      .startWith(windowHash())
+})
+
+function windowHash() {
+  return window.location.hash.replace("#", "")
+}
+
+function createStyleSheet(url) {
+  const link = document.createElement("link")
+  link.rel = "stylesheet"
   link.type = "text/css"
   link.href = url
   link.media = "all"
-
   return link
 }
