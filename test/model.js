@@ -86,5 +86,35 @@ describe("ModelDriver", () => {
       .subscribe()
   })
 
+  it("has .liftListBy operator for efficient list processing", done => {
+    const mod$ = new Rx.ReplaySubject(4)
+    const list$ = Model([{id: 1, msg: "tsers"}])(mod$)
+    O.merge(
+      list$.set(O.just([{id: 1, msg: "foo"}, {id: 2, msg: "foo"}])).delay(1),
+      list$.set(O.just([{id: 1, msg: "bar"}, {id: 2, msg: "foo"}])).delay(2),
+      list$.set(O.just([{id: 1, msg: "bar"}, {id: 2, msg: "bar"}])).delay(3),
+      list$.set(O.just([{id: 2, msg: "tsers"}])).delay(4)
+    ).subscribe(mod$)
+
+    list$.liftListById((_, item$) => ({m: item$.lens("msg")}))
+      .map(R.pluck("m"))
+      .flatMapLatest(O.combineLatest)
+      .bufferWithTime(100)
+      .first()
+      .subscribe(
+        xs => xs.should.deepEqual([
+          ["tsers"],
+          ["foo", "foo"],
+          ["bar", "foo"],
+          ["bar", "bar"],
+          ["tsers"]
+        ]),
+        done.fail,
+        done
+      )
+
+  })
+
+
 })
 
