@@ -205,19 +205,20 @@ const liftListById = fn => list$.map(items => items.map(item => fn(item.id, item
 
 The transformer function that is passed to `liftListById` should invoke some (child)
 component function and return the sinks from the child component. The transformer
-function receives item id as a first parameter and if you are lifting model
-(e.g. `M` or `M.lens("items")`), the function receives also second parameter
-which is the *lensed item state*. 
+function receives item id as item observable as a second parameter
+
+`Model` implements `liftListBy` and `liftListById` so that you can use them
+directly by using dot notation `M.liftListById((id, item$) => ...)`. In addition
+when using `liftListById` with model, the second parameter is **lensed item
+model** so you can use it like you'd use the parent model!
 
 The code is far more simpler than the explanation:
 ```javascript
-import {liftListById} from "stanga"
-
 let ID = 0
 
 function main({DOM, M}) {
   const counters$ = M
-  const childSinks$ = liftListById(counters$, (id, counter$) =>
+  const childSinks$ = counters$.liftListById((id, counter$) =>
     isolate(Counter, `counter-${id}`)({DOM, M: counter$.lens("val")}))
   // ...
 }
@@ -253,7 +254,7 @@ observables as values. Again, the actual code is simpler than the explanation:
 ```javascript
 function main({DOM, M}) {
   const counters$ = M
-  const childSinks$ = liftListById(counters$, (id, counter$) =>
+  const childSinks$ = counters$.liftListById((id, counter$) =>
     isolate(Counter, `counter-${id}`)({DOM, M: counter$.lens("val")}))
   // you can also extract multiple keys, e.g. flatCombine(childSinks$, "DOM", "foo", "bar")
   const children = flatCombine(childSinks$, "DOM")
@@ -272,7 +273,7 @@ an array from child sinks, the child sinks are *merged* by using
 ```javascript
 function main({DOM, M}) {
   const counters$ = M
-  const childSinks$ = liftListById(counters$, (id, counter$) =>
+  const childSinks$ = counters$.liftListById((id, counter$) =>
     isolate(Counter, `counter-${id}`)({DOM, M: counter$.lens("val")}))
   const vdom$ = ...  
   const childSinks = flatMerge(childSinks$, "M")
@@ -293,7 +294,7 @@ function Counter({DOM, M}) {
 
 function main({DOM, M}) {
   const counters$ = M
-  const childSinks$ = liftListById(counters$, (id, counter$) =>
+  const childSinks$ = counters$.liftListById((id, counter$) =>
     isolate(Counter, `counter-${id}`)({DOM, M: counter$.lens("val")}))
   
   const childVTrees$ = flatCombine(childSinks$, "DOM").DOM
