@@ -1,5 +1,5 @@
 import R from "ramda"
-import L from "partial.lenses"
+import P, * as L from "partial.lenses"
 import {liftListBy as llb} from "./operators"
 
 const extend = Object.assign
@@ -27,17 +27,17 @@ export function makeModelDriver(initial, opts = {}) {
     state$ = state$.replay(null, 1)
     state$.connect()
 
-    return model(toProp(state$), R.lens(R.identity, R.nthArg(0)))
+    return model(toProp(state$), L.identity)
 
     function model(state$, modLens) {
       const lens = (l, ...ls) =>
-        model(toProp(state$.map(L.view(l, ...ls))), L(modLens, l, ...ls))
+        model(toProp(state$.map(L.get(P(l, ...ls)))), P(modLens, l, ...ls))
 
       const mod = mod$ =>
-        mod$.map(mod => ({mod: R.over(modLens, mod), ID}))
+        mod$.map(mod => ({mod: L.modify(modLens, mod), ID}))
 
       const set = val$ =>
-        val$.map(val => ({mod: R.over(modLens, R.always(val)), ID}))
+        val$.map(val => ({mod: L.modify(modLens, R.always(val)), ID}))
 
       const log = prefix =>
         model(state$.do(s => info(prefix, s)).shareReplay(1), modLens)
@@ -45,7 +45,7 @@ export function makeModelDriver(initial, opts = {}) {
       const liftListBy = (identity, it, replay = ["DOM"]) => {
         const iterator = (ident, item$) => {
           const l = L.find(item => identity(item) === ident)
-          return it(ident, model(item$, L(modLens, l)))
+          return it(ident, model(item$, P(modLens, l)))
         }
         return llb(identity, state$, iterator, replay)
       }

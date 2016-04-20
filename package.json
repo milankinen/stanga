@@ -24,7 +24,8 @@
     "dist": "mkdir -p lib && rm -rf lib/* && babel src --out-dir lib"
   },
   "dependencies": {
-    "partial.lenses": "1.x"
+    "partial.lenses": "3.x",
+    "ramda": "^0.21.0"
   },
   "peerDependencies": {
     "rx": "4.x"
