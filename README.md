@@ -450,6 +450,13 @@ const merged = mergeByKey(a, b)
 // => {HTTP: Observable req, DOM: Observable vdom, M: Observable mod}
 ```
 
+## Migration guide
+
+### 0.x -> 1.x
+
+* Use `partial.lenses@3.x` instead of `partial.lenses@1.x`. Migration guide
+from [here](https://github.com/calmm-js/partial.lenses/blob/master/CHANGELOG.md)
+* Instead of `liftListById(model$, ....args)` use `model$.liftListById(...args)` 
 
 ## License
 
