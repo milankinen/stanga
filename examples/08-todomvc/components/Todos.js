@@ -9,13 +9,10 @@ import { getFilterFn } from "../utils"
 
 function Todos({DOM, M}) {
 
-  const filteredList$ = M.lens(L.lens(
-    model => ({
-      ...model,
-      list: model.list.filter(getFilterFn(model.filterName))
-    }),
-    R.identity // the setter method is needed so that we can update the list later
-  )).lens("list")
+  const filteredList$ = M.lens(L.props("filterName", "list")).lens(L.lens(
+    ({list, filterName}) => list.filter(getFilterFn(filterName)),
+    (list, model) => ({...model, list})
+  ))
   const todoList = TodoList({DOM, M: filteredList$})
 
   const header = Header({DOM, M: M.lens(L.props("draft", "list"))})
@@ -28,35 +25,36 @@ function Todos({DOM, M}) {
     todoList.M,
     footer.M
   )
-  const state$ = M.lens(L.augment({
-    allCompleted: ({list}) => list.every(R.prop("completed"))
-  }))
+
+  const styleDOM$ = M.map(({list}) => ({style: {"display": list.length ? "" : "none"}}))
+  const toggleDOM$ = M.map(({list}) =>
+    input(".toggle-all", {
+      type: "checkbox",
+      checked: list.every(R.prop("completed"))
+    }))
 
   return {
     M: mod$,
-    DOM: state$.map(({list, allCompleted}) =>
-      div([
-        header.DOM,
-        section(
-          ".main",
-          { style: {"display": list.length ? "" : "none"} },
-          [
-            input(".toggle-all", {
-              type: "checkbox",
-              checked: allCompleted
-            }),
-            todoList.DOM
-          ]
-        ),
-        footer.DOM
-      ])
-    )
+    DOM: O.combineLatest(header.DOM, styleDOM$, toggleDOM$, todoList.DOM, footer.DOM,
+      (header, style, toggle, list, footer) =>
+        div([
+          header,
+          section(
+            ".main",
+            style,
+            [
+              toggle,
+              list
+            ]
+          ),
+          footer
+        ]))
   }
 }
 
 export default Todos
 
-function intent ({DOM}) {
+function intent({DOM}) {
   return {
     toggleAll$: DOM.select(".toggle-all").events("change")
   }

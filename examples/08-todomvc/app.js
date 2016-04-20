@@ -16,11 +16,12 @@ export default function main({DOM, M, hash}) {
 
   return {
     M: mod$,
-    DOM: O.of(div([
-      section(".todoapp", todos.DOM),
-      footer(".info", [
-        p("Double-click to edit a todo")
-      ])
-    ])
-  )}
+    DOM: todos.DOM.map(todos =>
+      div([
+        section(".todoapp", todos),
+        footer(".info", [
+          p("Double-click to edit a todo")
+        ])
+      ])).debounce(0)
+  }
 }
