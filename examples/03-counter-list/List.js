@@ -1,7 +1,7 @@
 import {Observable as O} from "rx"
 import {h} from "@cycle/dom"
 import isolate from "@cycle/isolate"
-import {liftListById, flatMerge, flatCombine} from "stanga"
+import {flatMerge, flatCombine} from "stanga"
 
 import Counter from "../01-counter/Counter"
 
@@ -12,7 +12,7 @@ export function nextId() {
 
 export default function main({DOM, M}) {
   const counters$ = M
-  const childSinks$ = liftListById(counters$, (id, counter$) =>
+  const childSinks$ = counters$.liftListById((id, counter$) =>
     isolate(Counter, `counter-${id}`)({DOM, M: counter$.lens("val")}))
 
   const childVTrees$ = flatCombine(childSinks$, "DOM").DOM

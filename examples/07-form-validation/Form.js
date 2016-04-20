@@ -24,7 +24,7 @@ export default function main(sources) {
 
   const form$ = M.lens(L(
     "myForm",
-    L.default({}),
+    L.defaults({}),
     L.augment({
       values: fields => R.mapObjIndexed(R.prop("value"), fields)
     })
@@ -42,13 +42,13 @@ export default function main(sources) {
   const name = ITextInput({
     ...sources,
     label: "Name",
-    M: form$.lens(L("name", L.default({value: ""})))
+    M: form$.lens(L("name", L.defaults({value: ""})))
   })
 
   const gender = ISelect({
     ...sources,
     label: "Gender",
-    M: form$.lens(L("gender", L.default({value: ""}))),
+    M: form$.lens(L("gender", L.defaults({value: ""}))),
     options$: O.just([
       {value: "", label: "-- Select --"},
       {value: "m", label: "Male"},
@@ -65,7 +65,7 @@ export default function main(sources) {
   const shipHome = ICheckBox({
     ...sources,
     label: "Ship home?",
-    M: form$.lens(L("shipHome", L.default({value: false})))
+    M: form$.lens(L("shipHome", L.defaults({value: false})))
   })
 
   const address = ITextInput({

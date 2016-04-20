@@ -12,7 +12,7 @@ function model(M, prop) {
   const bmiLens = L(
     prop,
     // if we don't have <prop> property yet, then use these default values
-    L.default({weight: 80, height: 180}),
+    L.defaults({weight: 80, height: 180}),
     // add "read-only" bmi property to our BMI model that is derived from weight and height
     L.augment({bmi: ({weight: w, height: h}) => Math.round(w / (h * h * 0.0001))})
   )
