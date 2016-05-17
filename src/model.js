@@ -1,8 +1,9 @@
-import R from "ramda"
 import P, * as L from "partial.lenses"
 import {liftListBy as llb} from "./operators"
 
 const extend = Object.assign
+const always = value => () => value
+const equals = (a, b) => a === b
 
 export function makeModelDriver(initial, opts = {}) {
   const ID = {}
@@ -37,7 +38,7 @@ export function makeModelDriver(initial, opts = {}) {
         mod$.map(mod => ({mod: L.modify(modLens, mod), ID}))
 
       const set = val$ =>
-        val$.map(val => ({mod: L.modify(modLens, R.always(val)), ID}))
+        val$.map(val => ({mod: L.modify(modLens, always(val)), ID}))
 
       const log = prefix =>
         model(state$.do(s => info(prefix, s)).shareReplay(1), modLens)
@@ -58,7 +59,7 @@ export function makeModelDriver(initial, opts = {}) {
     }
 
     function toProp(val$) {
-      return val$.distinctUntilChanged(x => x, R.equals).shareReplay(1)
+      return val$.distinctUntilChanged(x => x, equals).shareReplay(1)
     }
   }
 }

@@ -1,10 +1,7 @@
-import R_ from "ramda"
 import P, * as L_ from "partial.lenses"
 import * as Op from "./operators"
 import {makeModelDriver} from "./model"
 
-
-export const R = R_
 
 export const L = Object.assign(P, L_)
 
