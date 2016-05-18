@@ -454,6 +454,11 @@ const merged = mergeByKey(a, b)
 from [here](https://github.com/calmm-js/partial.lenses/blob/master/CHANGELOG.md)
 * Instead of `liftListById(model$, ....args)` use `model$.liftListById(...args)` 
 
+### 1.0 -> 2.0
+
+* Replace `import {R} from "stanga"` with `import R from "ramda"`
+* Install `ramda` dependency if you were using such imports
+
 ## License
 
 MIT
