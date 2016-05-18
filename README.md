@@ -363,11 +363,6 @@ Initial state can be anything, usually it should be a valid JSON datatype
 Just a reference to the underlying **[partial.lenses](https://github.com/calmm-js/partial.lenses)**
 implementation.
 
-#### `R`
-
-Just a reference to the underlying **[ramda](http://ramdajs.com/)**
-implementation.
-
 #### `liftListById` 
 
 ```
